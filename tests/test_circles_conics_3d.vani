@@ -1,0 +1,72 @@
+// Tests for circumcircles, conic-section classification, 3D planes/lines,
+// and the law-of-cosines triangle angle.
+// Run with:  vanic test tests/test_circles_conics_3d.vani
+
+use "../src/lib.vani";
+
+fn close(a: f64, b: f64) -> bool {
+    return abs(a - b) < 1.0e-9;
+}
+
+fn main() -> i64 {
+    // Circumcenter of a right triangle is the midpoint of its hypotenuse;
+    // circumradius is half the hypotenuse length (here 5/2 = 2.5).
+    let p1: Point2D = point2d_new(0.0, 0.0);
+    let p2: Point2D = point2d_new(4.0, 0.0);
+    let p3: Point2D = point2d_new(0.0, 3.0);
+    let cc: Point2D = circumcenter(p1, p2, p3);
+    assert close(cc.x, 2.0);
+    assert close(cc.y, 1.5);
+    assert close(circumradius(p1, p2, p3), 2.5);
+    // Every vertex is equidistant from the circumcenter.
+    assert close(point2d_distance(cc, p1), circumradius(p1, p2, p3));
+    assert close(point2d_distance(cc, p2), circumradius(p1, p2, p3));
+    assert close(point2d_distance(cc, p3), circumradius(p1, p2, p3));
+
+    // Conic classification via discriminant B^2 - 4AC.
+    // Circle x^2+y^2=1: A=1,B=0,C=1 -> disc=-4 -> ellipse (0).
+    assert conic_classify(1.0, 0.0, 1.0) == 0;
+    // Ellipse 4x^2+9y^2=1: A=4,B=0,C=9 -> disc=-144 -> ellipse (0).
+    assert conic_classify(4.0, 0.0, 9.0) == 0;
+    // Parabola x^2-y=0: A=1,B=0,C=0 -> disc=0 -> parabola (1).
+    assert conic_classify(1.0, 0.0, 0.0) == 1;
+    // Hyperbola xy=1: A=0,B=1,C=0 -> disc=1 -> hyperbola (2).
+    assert conic_classify(0.0, 1.0, 0.0) == 2;
+    // Hyperbola x^2-y^2=1: A=1,B=0,C=-1 -> disc=4 -> hyperbola (2).
+    assert conic_classify(1.0, 0.0, 0.0 - 1.0) == 2;
+
+    // Plane through the xy-plane's z=0: normal parallel to (0,0,1),
+    // distance from (0,0,5) is 5.
+    let pl: Plane = plane_from_points(
+        point3d_new(0.0, 0.0, 0.0),
+        point3d_new(1.0, 0.0, 0.0),
+        point3d_new(0.0, 1.0, 0.0)
+    );
+    assert close(point_plane_distance(pl, point3d_new(0.0, 0.0, 5.0)), 5.0);
+    // A point already on the plane has distance 0.
+    assert close(point_plane_distance(pl, point3d_new(3.0, 7.0, 0.0)), 0.0);
+
+    // Classic skew-lines example: line1 through origin along x-axis, line2
+    // through (0,0,1) along y-axis. Shortest distance is 1.
+    let d = line3d_distance(
+        point3d_new(0.0, 0.0, 0.0), point3d_new(1.0, 0.0, 0.0),
+        point3d_new(0.0, 0.0, 1.0), point3d_new(0.0, 1.0, 0.0)
+    );
+    assert close(d, 1.0);
+    // Two parallel lines (never intersecting, cross product ~0): falls back
+    // to point-to-line distance. Line1 along x-axis through origin, line2
+    // along x-axis through (0,2,0): distance is 2.
+    let d_parallel = line3d_distance(
+        point3d_new(0.0, 0.0, 0.0), point3d_new(1.0, 0.0, 0.0),
+        point3d_new(0.0, 2.0, 0.0), point3d_new(1.0, 0.0, 0.0)
+    );
+    assert close(d_parallel, 2.0);
+
+    // Law of cosines: a 3-4-5 right triangle has a right angle opposite
+    // the side of length 5.
+    assert close(triangle_angle(3.0, 4.0, 5.0), f64_pi() / 2.0);
+    // Equilateral triangle: every angle is 60 degrees = pi/3.
+    assert close(triangle_angle(1.0, 1.0, 1.0), f64_pi() / 3.0);
+
+    return 0;
+}

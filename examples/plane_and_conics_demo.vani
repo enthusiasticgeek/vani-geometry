@@ -1,0 +1,38 @@
+// Demonstrates the 3D (plane, skew-line distance) and analytic (conic
+// classification) side of this library.
+//
+// Run with:  vanic run examples/plane_and_conics_demo.vani
+
+use "../src/lib.vani";
+
+fn main() -> i64 {
+    print "Plane through (1,0,0), (0,1,0), (0,0,1):";
+    let pl: Plane = plane_from_points(
+        point3d_new(1.0, 0.0, 0.0),
+        point3d_new(0.0, 1.0, 0.0),
+        point3d_new(0.0, 0.0, 1.0)
+    );
+    print "distance from the origin to that plane (expect 1/sqrt(3)):";
+    print point_plane_distance(pl, point3d_new(0.0, 0.0, 0.0));
+
+    print "";
+    print "Shortest distance between two skew lines:";
+    print "  line 1: through (0,0,0), direction (1,0,0)";
+    print "  line 2: through (0,0,1), direction (0,1,0)";
+    let d: f64 = line3d_distance(
+        point3d_new(0.0, 0.0, 0.0), point3d_new(1.0, 0.0, 0.0),
+        point3d_new(0.0, 0.0, 1.0), point3d_new(0.0, 1.0, 0.0)
+    );
+    print d;
+
+    print "";
+    print "Conic classification by discriminant B^2 - 4AC:";
+    print "  circle x^2+y^2=1  ->";
+    print conic_classify(1.0, 0.0, 1.0);
+    print "  parabola x^2-y=0  ->";
+    print conic_classify(1.0, 0.0, 0.0);
+    print "  hyperbola xy=1    ->";
+    print conic_classify(0.0, 1.0, 0.0);
+
+    return 0;
+}

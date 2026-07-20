@@ -1,0 +1,81 @@
+// Tests for 2D/3D point and vector construction and arithmetic.
+// Run with:  vanic test tests/test_vectors.vani
+
+use "../src/lib.vani";
+
+fn close(a: f64, b: f64) -> bool {
+    return abs(a - b) < 1.0e-9;
+}
+
+fn main() -> i64 {
+    // 2D construction and arithmetic.
+    let a: Point2D = point2d_new(1.0, 2.0);
+    let b: Point2D = point2d_new(4.0, 6.0);
+    let s: Point2D = point2d_add(a, b);
+    assert close(s.x, 5.0);
+    assert close(s.y, 8.0);
+    let d: Point2D = point2d_sub(b, a);
+    assert close(d.x, 3.0);
+    assert close(d.y, 4.0);
+    let sc: Point2D = point2d_scale(a, 2.0);
+    assert close(sc.x, 2.0);
+    assert close(sc.y, 4.0);
+    // a=(1,2), b=(4,6): distance = hypot(3,4) = 5.
+    assert close(point2d_distance(a, b), 5.0);
+    let mid: Point2D = point2d_midpoint(a, b);
+    assert close(mid.x, 2.5);
+    assert close(mid.y, 4.0);
+
+    // 2D vector ops. dot((3,4),(4,3)) = 3*4 + 4*3 = 24.
+    let v1: Point2D = point2d_new(3.0, 4.0);
+    let v2: Point2D = point2d_new(4.0, 3.0);
+    assert close(vec2d_dot(v1, v2), 24.0);
+    // cross((3,4),(4,3)) = 3*3 - 4*4 = -7.
+    assert close(vec2d_cross(v1, v2), 0.0 - 7.0);
+    assert close(vec2d_norm(v1), 5.0);
+    let vn: Point2D = vec2d_normalize(v1);
+    assert close(vn.x, 0.6);
+    assert close(vn.y, 0.8);
+    // Perpendicular vectors: angle = pi/2.
+    let perp_a: Point2D = point2d_new(1.0, 0.0);
+    let perp_b: Point2D = point2d_new(0.0, 1.0);
+    assert close(vec2d_angle_between(perp_a, perp_b), f64_pi() / 2.0);
+    // Parallel (same direction) vectors: angle = 0.
+    assert close(vec2d_angle_between(perp_a, point2d_new(5.0, 0.0)), 0.0);
+
+    // 3D construction and arithmetic.
+    let pa: Point3D = point3d_new(1.0, 2.0, 3.0);
+    let pb: Point3D = point3d_new(4.0, 6.0, 8.0);
+    let ps: Point3D = point3d_add(pa, pb);
+    assert close(ps.x, 5.0);
+    assert close(ps.y, 8.0);
+    assert close(ps.z, 11.0);
+    let pd: Point3D = point3d_sub(pb, pa);
+    assert close(pd.x, 3.0);
+    assert close(pd.y, 4.0);
+    assert close(pd.z, 5.0);
+    let psc: Point3D = point3d_scale(pa, 2.0);
+    assert close(psc.x, 2.0);
+    assert close(psc.y, 4.0);
+    assert close(psc.z, 6.0);
+    // pa=(1,2,3), pb=(4,6,8): diff=(3,4,5), distance = sqrt(9+16+25) = sqrt(50).
+    assert close(point3d_distance(pa, pb), sqrt(50.0));
+
+    // 3D vector ops: standard basis cross products.
+    let ex: Point3D = point3d_new(1.0, 0.0, 0.0);
+    let ey: Point3D = point3d_new(0.0, 1.0, 0.0);
+    let ez: Point3D = vec3d_cross(ex, ey);
+    assert close(ez.x, 0.0);
+    assert close(ez.y, 0.0);
+    assert close(ez.z, 1.0);
+    assert close(vec3d_dot(ex, ey), 0.0);
+    assert close(vec3d_dot(ex, ex), 1.0);
+    let v3: Point3D = point3d_new(0.0, 3.0, 4.0);
+    assert close(vec3d_norm(v3), 5.0);
+    let v3n: Point3D = vec3d_normalize(v3);
+    assert close(v3n.x, 0.0);
+    assert close(v3n.y, 0.6);
+    assert close(v3n.z, 0.8);
+
+    return 0;
+}

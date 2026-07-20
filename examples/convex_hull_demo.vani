@@ -1,0 +1,39 @@
+// Builds the convex hull of a scattered point set and reports its area and
+// perimeter, illustrating the computational-geometry side of this library.
+//
+// Run with:  vanic run examples/convex_hull_demo.vani
+
+use "../src/lib.vani";
+
+fn main() -> i64 {
+    let pts: Vec<Point2D> = vec(point2d_new(0.0, 0.0));
+    push(mut ref pts, point2d_new(4.0, 0.0));
+    push(mut ref pts, point2d_new(4.0, 4.0));
+    push(mut ref pts, point2d_new(0.0, 4.0));
+    push(mut ref pts, point2d_new(2.0, 2.0));   // interior -- excluded from the hull
+    push(mut ref pts, point2d_new(3.0, 1.0));   // interior -- excluded from the hull
+    push(mut ref pts, point2d_new(1.0, 3.5));   // interior -- excluded from the hull
+
+    print "input points:";
+    print (len(ref pts) as i64);
+
+    let hull: Vec<Point2D> = convex_hull(ref pts, len(ref pts) as i64);
+    let n: i64 = len(ref hull) as i64;
+    print "hull vertices (counter-clockwise):";
+    print n;
+    let i: i64 = 0;
+    while i < n {
+        print hull[i].x;
+        print hull[i].y;
+        i = i + 1;
+    }
+
+    print "hull area:";
+    print polygon_area(ref hull, n);
+    print "hull perimeter:";
+    print polygon_perimeter(ref hull, n);
+    print "closest pair among the original 7 points:";
+    print closest_pair_distance(ref pts, len(ref pts) as i64);
+
+    return 0;
+}
