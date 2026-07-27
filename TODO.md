@@ -85,11 +85,34 @@
 
 ---
 
+## v0.1.2 (2026-07-27)
+
+- [x] `circumcenter` now asserts `abs(d) > 1.0e-12` on its determinant
+      before dividing, rather than silently returning a garbage point
+      for (near-)collinear input. `circumradius` inherits the guard
+      through its `circumcenter` call. Verified the assert actually
+      fires (exit code 3, not a stack-overflow-shaped false crash --
+      see the note on `vanic run`'s assert-reporting history) via a
+      scratch repro on both backends before removing it.
+- [x] `convex_hull` now asserts `n >= 3` up front instead of returning a
+      meaningless result for fewer than 3 points. Same verification
+      approach as `circumcenter`. All-collinear input with `n >= 3` is
+      still NOT detected (a harder check -- would need to confirm every
+      cross product along the hull is zero -- out of scope for this
+      pass; the doc comment now says so explicitly).
+- [x] Incidental fix while re-verifying: 17 functions across the file had
+      `#[wcet(cycles=N)]` values that had drifted out of date relative
+      to the current compiler's static estimate (`point2d_add` and 16
+      others, up to a 2x difference in a few cases like
+      `plane_from_points` 136->274) -- pre-existing, unrelated to the
+      degenerate-input changes, but blocked `vanic check` from passing
+      cleanly until corrected. All values are now `vanic check`'s exact
+      current reported worst-case again.
+
 ## Future
 
 No v0.2.0 is currently planned. Candidates if a concrete need shows up:
 O(n log n) divide-and-conquer `convex_hull`/`closest_pair_distance` for large
 point sets, 3D convex hull, polygon-polygon intersection/union (clipping),
-Delaunay triangulation, and degenerate-input handling (collinear points for
-`circumcenter`, fewer-than-3-point `convex_hull`) that currently returns a
-meaningless result rather than erroring.
+Delaunay triangulation, and all-collinear detection for `convex_hull` when
+`n >= 3` (currently only the `n < 3` degenerate case is rejected).

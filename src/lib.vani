@@ -37,19 +37,19 @@ fn point2d_new(x: f64, y: f64) -> Point2D {
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 30)]
 fn point2d_add(a: Point2D, b: Point2D) -> Point2D {
     return Point2D { x: a.x + b.x, y: a.y + b.y };
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 30)]
 fn point2d_sub(a: Point2D, b: Point2D) -> Point2D {
     return Point2D { x: a.x - b.x, y: a.y - b.y };
 }
 
 #[bounded_stack(bytes = 104)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 22)]
 fn point2d_scale(a: Point2D, s: f64) -> Point2D {
     return Point2D { x: a.x * s, y: a.y * s };
 }
@@ -61,7 +61,7 @@ fn point2d_distance(a: Point2D, b: Point2D) -> f64 {
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 36)]
 fn point2d_midpoint(a: Point2D, b: Point2D) -> Point2D {
     return Point2D { x: (a.x + b.x) / 2.0, y: (a.y + b.y) / 2.0 };
 }
@@ -89,7 +89,7 @@ fn vec2d_norm(a: Point2D) -> f64 {
 }
 
 #[bounded_stack(bytes = 176)]
-#[wcet(cycles = 73)]
+#[wcet(cycles = 85)]
 fn vec2d_normalize(a: Point2D) -> Point2D {
     let n: f64 = vec2d_norm(a);
     return Point2D { x: a.x / n, y: a.y / n };
@@ -112,19 +112,19 @@ fn point3d_new(x: f64, y: f64, z: f64) -> Point3D {
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 42)]
 fn point3d_add(a: Point3D, b: Point3D) -> Point3D {
     return Point3D { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z };
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 42)]
 fn point3d_sub(a: Point3D, b: Point3D) -> Point3D {
     return Point3D { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z };
 }
 
 #[bounded_stack(bytes = 104)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 30)]
 fn point3d_scale(a: Point3D, s: f64) -> Point3D {
     return Point3D { x: a.x * s, y: a.y * s, z: a.z * s };
 }
@@ -145,7 +145,7 @@ fn vec3d_dot(a: Point3D, b: Point3D) -> f64 {
 }
 
 #[bounded_stack(bytes = 128)]
-#[wcet(cycles = 10)]
+#[wcet(cycles = 84)]
 fn vec3d_cross(a: Point3D, b: Point3D) -> Point3D {
     return Point3D {
         x: a.y * b.z - a.z * b.y,
@@ -161,7 +161,7 @@ fn vec3d_norm(a: Point3D) -> f64 {
 }
 
 #[bounded_stack(bytes = 176)]
-#[wcet(cycles = 83)]
+#[wcet(cycles = 103)]
 fn vec3d_normalize(a: Point3D) -> Point3D {
     let n: f64 = vec3d_norm(a);
     return Point3D { x: a.x / n, y: a.y / n, z: a.z / n };
@@ -171,7 +171,7 @@ fn vec3d_normalize(a: Point3D) -> Point3D {
 
 // Perpendicular distance from point p to the infinite line through p1, p2.
 #[bounded_stack(bytes = 328)]
-#[wcet(cycles = 149)]
+#[wcet(cycles = 189)]
 fn line2d_point_distance(p1: Point2D, p2: Point2D, p: Point2D) -> f64 {
     let d: Point2D = point2d_sub(p2, p1);
     let v: Point2D = point2d_sub(p, p1);
@@ -181,7 +181,7 @@ fn line2d_point_distance(p1: Point2D, p2: Point2D, p: Point2D) -> f64 {
 // Distance from point p to the segment p1-p2 (clamped projection -- the
 // nearest point may be an endpoint rather than the perpendicular foot).
 #[bounded_stack(bytes = 360)]
-#[wcet(cycles = 331)]
+#[wcet(cycles = 403)]
 fn segment_point_distance(p1: Point2D, p2: Point2D, p: Point2D) -> f64 {
     let d: Point2D = point2d_sub(p2, p1);
     let len_sq: f64 = vec2d_dot(d, d);
@@ -197,7 +197,7 @@ fn segment_point_distance(p1: Point2D, p2: Point2D, p: Point2D) -> f64 {
 // Whether segments p1-p2 and p3-p4 intersect (including touching at an
 // endpoint), via the standard orientation test.
 #[bounded_stack(bytes = 386)]
-#[wcet(cycles = 322)]
+#[wcet(cycles = 442)]
 fn segments_intersect(p1: Point2D, p2: Point2D, p3: Point2D, p4: Point2D) -> bool {
     let d1: Point2D = point2d_sub(p2, p1);
     let d2: Point2D = point2d_sub(p4, p3);
@@ -233,7 +233,7 @@ fn segment_intersection_point(p1: Point2D, p2: Point2D, p3: Point2D, p4: Point2D
 // ── Triangles and polygons ────────────────────────────────────────────────────
 
 #[bounded_stack(bytes = 264)]
-#[wcet(cycles = 83)]
+#[wcet(cycles = 123)]
 fn triangle_area(p1: Point2D, p2: Point2D, p3: Point2D) -> f64 {
     return abs(vec2d_cross(point2d_sub(p2, p1), point2d_sub(p3, p1))) / 2.0;
 }
@@ -350,11 +350,13 @@ fn _sort_points_lex(pts: mut ref Vec<Point2D>, n: i64) {
 // step here being O(n^2) (see _sort_points_lex) -- still far cheaper than
 // the O(n^3) gift-wrapping alternative for anything but tiny n. Returns
 // hull vertices in counter-clockwise order, no repeated closing point.
-// Assumes `pts` has no duplicate points and at least 3 are not collinear;
-// degenerate inputs (all collinear, or fewer than 3 points) return a
-// meaningless result rather than erroring, matching v0.1.0's scope.
+// `n` must be >= 3 (a hull isn't a meaningful concept below that) --
+// enforced via assert rather than returning a meaningless result. Still
+// assumes `pts` has no duplicate points; all-collinear input (a
+// degenerate hull even with n >= 3) is not detected in v0.1.0.
 #[bounded_stack(bytes = 648)]
 fn convex_hull(pts: ref Vec<Point2D>, n: i64) -> Vec<Point2D> {
+    assert n >= 3;
     let sorted: Vec<Point2D> = vec();
     let k0: i64 = 0;
     while k0 < n {
@@ -416,14 +418,18 @@ fn convex_hull(pts: ref Vec<Point2D>, n: i64) -> Vec<Point2D> {
 // ── Circles ────────────────────────────────────────────────────────────────────
 
 // Circumcenter of the triangle p1, p2, p3 (the point equidistant from all
-// three). Undefined (division by ~0) for collinear points.
-#[bounded_stack(bytes = 256)]
-#[wcet(cycles = 178)]
+// three). Collinear points have no finite circumcenter (the "circle"
+// through them has infinite radius) -- enforced via assert on the
+// determinant d rather than dividing by ~0 and returning a meaningless
+// point.
+#[bounded_stack(bytes = 264)]
+#[wcet(cycles = 187)]
 fn circumcenter(p1: Point2D, p2: Point2D, p3: Point2D) -> Point2D {
     let ax: f64 = p1.x; let ay: f64 = p1.y;
     let bx: f64 = p2.x; let by: f64 = p2.y;
     let cx: f64 = p3.x; let cy: f64 = p3.y;
     let d: f64 = 2.0 * (ax * (by - cy) + bx * (cy - ay) + cx * (ay - by));
+    assert abs(d) > 1.0e-12;
     let a2: f64 = ax * ax + ay * ay;
     let b2: f64 = bx * bx + by * by;
     let c2: f64 = cx * cx + cy * cy;
@@ -433,7 +439,7 @@ fn circumcenter(p1: Point2D, p2: Point2D, p3: Point2D) -> Point2D {
 }
 
 #[bounded_stack(bytes = 392)]
-#[wcet(cycles = 266)]
+#[wcet(cycles = 275)]
 fn circumradius(p1: Point2D, p2: Point2D, p3: Point2D) -> f64 {
     return point2d_distance(circumcenter(p1, p2, p3), p1);
 }
@@ -461,7 +467,7 @@ fn conic_classify(coeff_a: f64, coeff_b: f64, coeff_c: f64) -> i64 {
 // normalized (its length is |cross product|, not 1) -- point_plane_distance
 // divides by the normal's length itself, so this is safe to pass directly.
 #[bounded_stack(bytes = 392)]
-#[wcet(cycles = 124)]
+#[wcet(cycles = 274)]
 fn plane_from_points(p1: Point3D, p2: Point3D, p3: Point3D) -> Plane {
     let u: Point3D = point3d_sub(p2, p1);
     let v: Point3D = point3d_sub(p3, p1);
@@ -482,7 +488,7 @@ fn point_plane_distance(pl: Plane, p: Point3D) -> f64 {
 // and a direction vector. Falls back to point-to-line distance if the
 // directions are parallel (cross product ~0), rather than dividing by ~0.
 #[bounded_stack(bytes = 416)]
-#[wcet(cycles = 436)]
+#[wcet(cycles = 626)]
 fn line3d_distance(p1: Point3D, d1: Point3D, p2: Point3D, d2: Point3D) -> f64 {
     let n: Point3D = vec3d_cross(d1, d2);
     let n_norm: f64 = vec3d_norm(n);
