@@ -1,31 +1,156 @@
 {
-  "why_use_this": "Reach for this package whenever a problem is phrased in terms of points, lines, polygons, or planes in 2D/3D space -- distance between points, whether two segments cross, a polygon's area/centroid, the convex hull of a point set, the plane through three points -- rather than in terms of abstract vectors/matrices ([vani-matrix](https://github.com/enthusiasticgeek/vani-matrix)) or symbolic expressions ([vani-symbolic](https://github.com/enthusiasticgeek/vani-symbolic)). `Point2D`, `Point3D`, and `Plane` are plain `f64`-only structs with no heap-owning fields, so they're freely copyable -- no `ref`/`mut ref` ceremony for individual points, only for the `Vec<Point2D>` collection-taking functions (`convex_hull`, `polygon_area`, `closest_pair_distance`, ...). Every algorithm here is the simplest textbook-correct choice rather than the asymptotically optimal one (`convex_hull` and `closest_pair_distance` are \\( O(n^2) \\), not the \\( O(n \\log n) \\) divide-and-conquer versions) -- fine at this library's intended modest input sizes; reach elsewhere if you specifically need to scale to very large point sets."
+  "why_use_this": "Reach for this package whenever a problem is phrased in terms of points, lines, polygons, or planes in 2D/3D space -- distance between points, whether two segments cross, a polygon's area/centroid, the convex hull of a point set, the plane through three points -- rather than in terms of abstract vectors/matrices ([vani-matrix](https://github.com/enthusiasticgeek/vani-matrix)) or symbolic expressions ([vani-symbolic](https://github.com/enthusiasticgeek/vani-symbolic)). `Point2D`, `Point3D`, and `Plane` are plain `f64`-only structs with no heap-owning fields, so they're freely copyable -- no `ref`/`mut ref` ceremony for individual points, only for the `Vec<Point2D>` collection-taking functions (`convex_hull`, `polygon_area`, `closest_pair_distance`, ...). Every algorithm here is the simplest textbook-correct choice rather than the asymptotically optimal one (`convex_hull` and `closest_pair_distance` are \\( O(n^2) \\), not the \\( O(n \\log n) \\) divide-and-conquer versions) -- fine at this library's intended modest input sizes; reach elsewhere if you specifically need to scale to very large point sets.\n\nA running example threads through most of the 2D notes below: the right triangle with vertices \\(P_1=(0,0)\\), \\(P_2=(3,0)\\), \\(P_3=(0,4)\\) -- legs 3 and 4, hypotenuse 5 (a 3-4-5 right triangle), so every distance and angle comes out as a clean, hand-checkable number."
   ,
   "math_notes": {
-    "point2d_distance": "\\( \\lVert b - a \\rVert = \\sqrt{(b_x-a_x)^2 + (b_y-a_y)^2} \\) -- the Euclidean distance between two points.",
-    "point2d_midpoint": "\\( \\dfrac{a+b}{2} = \\left(\\dfrac{a_x+b_x}{2}, \\dfrac{a_y+b_y}{2}\\right) \\).",
-    "vec2d_dot": "\\( a \\cdot b = a_x b_x + a_y b_y \\) -- also equals \\( \\lVert a \\rVert \\lVert b \\rVert \\cos\\theta \\), the basis for `vec2d_angle_between`.",
-    "vec2d_cross": "\\( a \\times b = a_x b_y - a_y b_x \\) -- the 2D \"cross product\" scalar (the z-component of the 3D cross product for vectors with no z-component); its sign tells you whether \\( b \\) is counter-clockwise (\\(>0\\)) or clockwise (\\(<0\\)) from \\( a \\), the basis for `segments_intersect`, `triangle_area`, and the convex-hull turn test.",
-    "vec2d_norm": "\\( \\lVert a \\rVert = \\sqrt{a_x^2+a_y^2} \\) -- the vector's length.",
-    "vec2d_normalize": "\\( \\hat{a} = a / \\lVert a \\rVert \\) -- the unit vector in \\( a \\)'s direction.",
-    "vec2d_angle_between": "\\( \\theta = \\arccos\\!\\left(\\dfrac{a \\cdot b}{\\lVert a \\rVert \\lVert b \\rVert}\\right) \\), the angle between two vectors from the dot-product identity \\( a\\cdot b = \\lVert a\\rVert\\lVert b\\rVert\\cos\\theta \\), always in \\( [0,\\pi] \\) (unsigned -- doesn't distinguish clockwise from counter-clockwise; use `vec2d_cross`'s sign for that).",
-    "point3d_distance": "\\( \\lVert b-a \\rVert = \\sqrt{(b_x-a_x)^2+(b_y-a_y)^2+(b_z-a_z)^2} \\), the 3D analog of `point2d_distance`.",
-    "vec3d_dot": "\\( a \\cdot b = a_x b_x + a_y b_y + a_z b_z \\).",
-    "vec3d_cross": "\\( a \\times b = (a_y b_z - a_z b_y,\\ a_z b_x - a_x b_z,\\ a_x b_y - a_y b_x) \\) -- a vector perpendicular to both \\( a \\) and \\( b \\), with magnitude \\( \\lVert a\\rVert\\lVert b\\rVert\\sin\\theta \\) equal to the area of the parallelogram they span. Used by `plane_from_points` to find a plane's normal.",
-    "vec3d_norm": "\\( \\lVert a \\rVert = \\sqrt{a_x^2+a_y^2+a_z^2} \\).",
-    "vec3d_normalize": "\\( \\hat{a} = a / \\lVert a \\rVert \\).",
-    "line2d_point_distance": "The perpendicular distance from point \\( p \\) to the INFINITE line through \\( p_1, p_2 \\): \\( \\dfrac{| (p_2-p_1) \\times (p-p_1) |}{\\lVert p_2-p_1 \\rVert} \\), the 2D cross-product magnitude divided by the line's length -- contrast with `segment_point_distance`, which clamps to the finite segment's endpoints.",
-    "segment_point_distance": "The distance from \\( p \\) to the closest point on the finite SEGMENT \\( [p_1,p_2] \\): projects \\( p \\) onto the line through \\( p_1,p_2 \\), clamps the projection parameter \\( t \\) to \\( [0,1] \\) so the closest point can't fall outside the segment, then returns the distance to that clamped point -- the segment analog of `line2d_point_distance`.",
-    "triangle_area": "The shoelace-formula / cross-product triangle area: \\( \\tfrac{1}{2} \\left| (p_2-p_1) \\times (p_3-p_1) \\right| \\).",
-    "polygon_area": "The shoelace formula for a simple polygon: \\( \\tfrac{1}{2} \\left| \\sum_{i=0}^{n-1} \\big(x_i y_{i+1} - x_{i+1} y_i\\big) \\right| \\) (indices mod \\( n \\)) -- the same cross-product idea `triangle_area` uses, summed around every edge.",
-    "polygon_perimeter": "\\( \\sum_{i=0}^{n-1} \\lVert p_{i+1} - p_i \\rVert \\) (indices mod \\( n \\)) -- sum of every edge's length via `point2d_distance`.",
-    "polygon_centroid": "The AREA centroid (not the simple average of vertices, which differs for non-regular polygons): \\( C_x = \\dfrac{1}{6A}\\sum (x_i+x_{i+1})(x_iy_{i+1}-x_{i+1}y_i) \\), \\( C_y = \\dfrac{1}{6A}\\sum (y_i+y_{i+1})(x_iy_{i+1}-x_{i+1}y_i) \\), where \\( A \\) is the signed area from the shoelace formula.",
-    "circumcenter": "The center of the unique circle passing through all three of \\( p_1, p_2, p_3 \\) -- the point equidistant from all three, found as the intersection of any two of the triangle's perpendicular bisectors.",
-    "circumradius": "\\( R = \\dfrac{abc}{4K} \\), where \\( a,b,c \\) are the triangle's three side lengths and \\( K \\) is its area (`triangle_area`) -- the radius of the circle `circumcenter` finds the center of.",
-    "conic_classify": "Classifies \\( Ax^2 + Bxy + Cy^2 + \\ldots = 0 \\) by the sign of its discriminant \\( B^2 - 4AC \\): negative is an ellipse, zero is a parabola, positive is a hyperbola -- the standard conic-section discriminant test.",
-    "plane_from_points": "The plane \\( n_x x + n_y y + n_z z + d = 0 \\) through three non-collinear points, with normal \\( \\mathbf{n} = (p_2-p_1) \\times (p_3-p_1) \\) (via `vec3d_cross`) and \\( d = -\\mathbf{n}\\cdot p_1 \\) chosen so \\( p_1 \\) satisfies the plane equation.",
-    "point_plane_distance": "The signed perpendicular distance from point \\( p \\) to a plane \\( n_xx+n_yy+n_zz+d=0 \\): \\( \\dfrac{n_x p_x + n_y p_y + n_z p_z + d}{\\lVert \\mathbf{n} \\rVert} \\) -- positive on one side of the plane, negative on the other, zero exactly on it.",
-    "line3d_distance": "The shortest distance between two skew (non-intersecting, non-parallel) 3D lines, each given as a point plus direction \\( (p_1,d_1) \\) and \\( (p_2,d_2) \\): \\( \\dfrac{\\big| (p_2-p_1)\\cdot(d_1\\times d_2) \\big|}{\\lVert d_1\\times d_2 \\rVert} \\) -- the component of the vector between the two lines' points along the common perpendicular direction \\( d_1\\times d_2 \\).",
-    "triangle_angle": "The law of cosines, solved for the angle opposite side \\( c \\): \\( C = \\arccos\\!\\left(\\dfrac{a^2+b^2-c^2}{2ab}\\right) \\), given all three side lengths \\( a,b,c \\)."
+    "point2d_distance": {
+      "intuition": "The straight-line distance between two points -- the Pythagorean theorem applied directly: the difference in \\(x\\) and the difference in \\(y\\) form the two legs of a right triangle, and the distance is that triangle's hypotenuse.",
+      "formula": "\\[ \\lVert b-a\\rVert = \\sqrt{(b_x-a_x)^2+(b_y-a_y)^2} \\]",
+      "example": "Using the running triangle: \\(\\text{dist}(P_1,P_2) = \\sqrt{(3-0)^2+(0-0)^2}=\\sqrt9=3\\). \\(\\text{dist}(P_1,P_3)=\\sqrt{0^2+4^2}=4\\). \\(\\text{dist}(P_2,P_3)=\\sqrt{(0-3)^2+(4-0)^2}=\\sqrt{9+16}=\\sqrt{25}=5\\) -- the three side lengths \\(3,4,5\\) this running example was chosen for.",
+      "why": "Every one of this package's distance-based functions (`segment_point_distance`, `polygon_perimeter`, `circumradius`, ...) ultimately reduces to this same Pythagorean calculation somewhere inside it."
+    },
+    "point2d_midpoint": {
+      "intuition": "The point exactly halfway between two others -- average each coordinate independently.",
+      "formula": "\\[ \\dfrac{a+b}{2} \\]",
+      "example": "Midpoint of \\(P_2=(3,0)\\) and \\(P_3=(0,4)\\) (the hypotenuse's endpoints): \\(\\left(\\dfrac{3+0}{2},\\dfrac{0+4}{2}\\right)=(1.5,\\,2)\\).",
+      "why": "This exact point reappears in `circumcenter`'s worked example below -- for a RIGHT triangle specifically, the circumcenter is always exactly the hypotenuse's midpoint, a classical geometric fact this running example makes concrete."
+    },
+    "vec2d_dot": {
+      "intuition": "The dot product measures how much two vectors point in the SAME direction -- large and positive when they point the same way, zero when they're perpendicular, negative when they point opposite ways.",
+      "formula": "\\[ a\\cdot b = a_xb_x+a_yb_y \\]",
+      "example": "Using the running triangle's two legs as vectors from \\(P_1\\): \\(a=P_2-P_1=(3,0)\\), \\(b=P_3-P_1=(0,4)\\). \\(a\\cdot b = 3\\times0+0\\times4=0\\).",
+      "why": "A dot product of EXACTLY zero means the two vectors are perpendicular -- confirming directly, via pure arithmetic and no trigonometry, that this triangle really does have a right angle at \\(P_1\\) (the same fact `triangle_angle`'s worked example confirms a different way, via the law of cosines)."
+    },
+    "vec2d_cross": {
+      "intuition": "The 2D cross product measures the SIGNED area of the parallelogram the two vectors would span, and its sign tells you whether the second vector is a counterclockwise or clockwise turn from the first.",
+      "formula": "\\[ a\\times b = a_xb_y-a_yb_x \\]",
+      "example": "Using the same two legs \\(a=(3,0)\\), \\(b=(0,4)\\): \\(a\\times b = 3\\times4-0\\times0=12\\). Positive, so \\(b\\) is a counterclockwise turn from \\(a\\) -- consistent with going from \\(P_1\\to P_2\\) then turning left to face \\(P_3\\).",
+      "why": "This value, \\(12\\), reappears directly (halved) in `triangle_area`'s worked example -- the cross product's magnitude IS twice the triangle's area, which is exactly why `triangle_area` is built directly on top of this function."
+    },
+    "vec2d_norm": {
+      "intuition": "A vector's length -- how far its tip is from its tail, ignoring direction entirely.",
+      "formula": "\\[ \\lVert a\\rVert = \\sqrt{a_x^2+a_y^2} \\]",
+      "example": "For \\(a=P_2-P_1=(3,0)\\): \\(\\lVert a\\rVert = \\sqrt{9+0}=3\\) -- matching `point2d_distance(P_1,P_2)=3\\) exactly, since a vector's length IS the distance between its tail and tip.",
+      "why": "This is the denominator `vec2d_normalize` divides by to get a unit vector, and it's also what `vec2d_angle_between`'s formula divides the dot product by -- a building block for several of the other vector functions."
+    },
+    "vec2d_normalize": {
+      "intuition": "Shrink or stretch a vector to have length exactly 1, keeping its direction unchanged -- like taking a photo of an arrow and resizing it to a standard length so only the direction it points still matters.",
+      "formula": "\\[ \\hat a = a/\\lVert a\\rVert \\]",
+      "example": "For \\(a=(3,0)\\) (length 3, from `vec2d_norm`'s example): \\(\\hat a = (3/3,\\,0/3)=(1,0)\\) -- a unit vector pointing in exactly the same direction (straight along the \\(x\\)-axis), just rescaled to length 1.",
+      "why": "Normalized vectors are what you want whenever only DIRECTION matters, not magnitude -- e.g. a surface normal for lighting calculations, or a direction to travel along, where the length of the original vector was incidental."
+    },
+    "vec2d_angle_between": {
+      "intuition": "Uses the dot product's own geometric meaning (\\(a\\cdot b = \\lVert a\\rVert\\lVert b\\rVert\\cos\\theta\\)) backwards -- since you can compute the LEFT side directly, solve for \\(\\theta\\) via inverse cosine.",
+      "formula": "\\[ \\theta = \\arccos\\!\\left(\\dfrac{a\\cdot b}{\\lVert a\\rVert\\lVert b\\rVert}\\right) \\]",
+      "example": "Using the running triangle's legs \\(a=(3,0)\\), \\(b=(0,4)\\): \\(a\\cdot b=0\\) (from `vec2d_dot`'s example), \\(\\lVert a\\rVert=3\\), \\(\\lVert b\\rVert=4\\). \\(\\theta=\\arccos(0/12)=\\arccos(0)=\\pi/2=90°\\) -- confirming the right angle at \\(P_1\\) yet again, this time via the angle formula directly.",
+      "why": "This always returns an UNSIGNED angle in \\([0,\\pi]\\) -- it can tell you the two vectors are 90° apart, but not whether \\(b\\) is 90° clockwise or counterclockwise from \\(a\\). For that directional information, you need `vec2d_cross`'s SIGN instead (positive here, confirming counterclockwise -- see `vec2d_cross`'s own example)."
+    },
+    "point3d_distance": {
+      "intuition": "The same Pythagorean idea as `point2d_distance`, extended with a third coordinate.",
+      "formula": "\\[ \\lVert b-a\\rVert = \\sqrt{(b_x-a_x)^2+(b_y-a_y)^2+(b_z-a_z)^2} \\]",
+      "example": "Distance from \\((0,0,0)\\) to \\((1,2,2)\\): \\(\\sqrt{1^2+2^2+2^2}=\\sqrt{1+4+4}=\\sqrt9=3\\).",
+      "why": "Notice this is just `point2d_distance`'s formula with one more squared term under the root -- the pattern generalizes to any number of dimensions the same way, always \"sum of squared differences, then square root.\""
+    },
+    "vec3d_dot": {
+      "intuition": "Same same-direction-measuring idea as `vec2d_dot`, with a third component.",
+      "formula": "\\[ a\\cdot b = a_xb_x+a_yb_y+a_zb_z \\]",
+      "example": "For \\(a=(1,0,0)\\) and \\(b=(0,1,0)\\) (the \\(x\\)- and \\(y\\)-axis unit vectors): \\(a\\cdot b = 1\\times0+0\\times1+0\\times0=0\\) -- confirming the \\(x\\)- and \\(y\\)-axes are perpendicular, as expected.",
+      "why": "These same two vectors, \\((1,0,0)\\) and \\((0,1,0)\\), reappear in `vec3d_cross`'s worked example below -- their cross product should point straight along the THIRD axis, \\(z\\), which is exactly what `vec3d_cross`'s example confirms."
+    },
+    "vec3d_cross": {
+      "intuition": "Unlike the 2D cross product (a single signed number), the 3D cross product produces a whole new VECTOR -- one perpendicular to both inputs, following the right-hand rule for its direction, with length equal to the area of the parallelogram the two inputs span.",
+      "formula": "\\[ a\\times b = (a_yb_z-a_zb_y,\\ a_zb_x-a_xb_z,\\ a_xb_y-a_yb_x) \\]",
+      "example": "For \\(a=(1,0,0)\\) and \\(b=(0,1,0)\\) (from `vec3d_dot`'s example): \\(a\\times b = (0\\times0-0\\times1,\\ 0\\times0-1\\times0,\\ 1\\times1-0\\times0) = (0,\\,0,\\,1)\\) -- exactly the \\(z\\)-axis unit vector, perpendicular to both inputs as expected (by the right-hand rule: point fingers along \\(x\\), curl toward \\(y\\), thumb points along \\(+z\\)).",
+      "why": "This exact result, \\((0,0,1)\\), reappears directly in `plane_from_points`'s worked example -- it's the normal vector of the plane through the origin, \\((1,0,0)\\), and \\((0,1,0)\\), which (correctly) turns out to be the ordinary \\(xy\\)-plane."
+    },
+    "vec3d_norm": {
+      "intuition": "Same length-of-a-vector idea as `vec2d_norm`, with a third component under the square root.",
+      "formula": "\\[ \\lVert a\\rVert = \\sqrt{a_x^2+a_y^2+a_z^2} \\]",
+      "example": "For \\(a=(0,0,1)\\) (from `vec3d_cross`'s example): \\(\\lVert a\\rVert=\\sqrt{0+0+1}=1\\) -- already a unit vector, consistent with it being a cross product of two ALREADY-perpendicular unit vectors (whose spanned parallelogram is a unit square, area 1).",
+      "why": "This is exactly the denominator `point_plane_distance`'s formula divides by -- a plane's normal vector needs its own length accounted for so the resulting distance is measured in genuine spatial units, not scaled by however long the normal vector happened to be."
+    },
+    "vec3d_normalize": {
+      "intuition": "Same rescale-to-length-1 idea as `vec2d_normalize`, in 3D.",
+      "formula": "\\[ \\hat a = a/\\lVert a\\rVert \\]",
+      "example": "For \\(a=(0,0,2)\\) (length 2): \\(\\hat a = (0,0,1)\\) -- same direction, rescaled to length 1.",
+      "why": "Useful whenever a 3D direction (a surface normal, a ray direction) needs to be compared or combined with other unit vectors, where the original vector's arbitrary length would otherwise throw off the comparison."
+    },
+    "line2d_point_distance": {
+      "intuition": "The shortest distance from a point to an INFINITE line is always measured perpendicular to the line -- and the 2D cross product conveniently gives you exactly the parallelogram area you need to compute that perpendicular distance directly, without needing to explicitly find the closest point first.",
+      "formula": "\\[ \\dfrac{|(p_2-p_1)\\times(p-p_1)|}{\\lVert p_2-p_1\\rVert} \\]",
+      "example": "Distance from \\(p=(1,2)\\) to the infinite line through \\(P_1=(0,0)\\) and \\(P_2=(3,0)\\) (the \\(x\\)-axis): \\((p_2-p_1)\\times(p-p_1) = (3,0)\\times(1,2) = 3\\times2-0\\times1=6\\). Divide by \\(\\lVert p_2-p_1\\rVert=3\\): \\(6/3=2\\). Sanity check directly: the \\(x\\)-axis is the line \\(y=0\\), and \\(p=(1,2)\\) has \\(y=2\\) -- its perpendicular distance to the \\(x\\)-axis is obviously just \\(2\\), matching.",
+      "why": "This treats the line as INFINITE, extending forever in both directions -- compare `segment_point_distance`'s example below, which uses this SAME line but with a point that projects OUTSIDE the finite segment, giving a different (larger) answer once the segment's endpoint becomes the actual closest point."
+    },
+    "segment_point_distance": {
+      "intuition": "For a FINITE segment (not an infinite line), the closest point might be a point along the segment's interior (same as the infinite-line case) OR it might be one of the segment's own endpoints, if the perpendicular from your point would otherwise land outside the segment entirely.",
+      "formula": "Project \\(p\\) onto the line through \\(p_1,p_2\\), clamp the projection parameter \\(t\\) to \\([0,1]\\), then measure distance to that clamped point.",
+      "example": "Take the SAME segment \\(P_1=(0,0)\\) to \\(P_2=(3,0)\\), but now with \\(p=(5,2)\\) (past the \\(P_2\\) end). The projection parameter is \\(t=\\dfrac{(p-p_1)\\cdot(p_2-p_1)}{\\lVert p_2-p_1\\rVert^2} = \\dfrac{(5,2)\\cdot(3,0)}{9}=\\dfrac{15}{9}\\approx1.67\\) -- greater than \\(1\\), so it's clamped to \\(t=1\\), meaning the closest point on the SEGMENT is \\(P_2=(3,0)\\) itself, not a point further along the (infinite) line. Distance from \\((5,2)\\) to \\((3,0)\\): \\(\\sqrt{(5-3)^2+(2-0)^2}=\\sqrt{4+4}=\\sqrt8\\approx2.83\\).",
+      "why": "Compare this \\(2.83\\) against what `line2d_point_distance` (the INFINITE line version) would give for this same point: only \\(2.0\\) (the pure perpendicular distance to the \\(x\\)-axis, ignoring where the segment actually ends) -- a real, meaningful difference caused entirely by the segment's finiteness. Using the wrong one of these two functions for your actual problem (segment vs. infinite line) gives a genuinely different, wrong answer whenever the closest approach falls outside the segment."
+    },
+    "triangle_area": {
+      "intuition": "Twice a triangle's area equals the area of the parallelogram spanned by two of its edge vectors (the cross product) -- so just take the cross product and halve it.",
+      "formula": "\\[ \\tfrac12\\,|(p_2-p_1)\\times(p_3-p_1)| \\]",
+      "example": "Using the running triangle: \\((P_2-P_1)\\times(P_3-P_1) = 12\\) (from `vec2d_cross`'s example). Area \\(=\\tfrac12|12|=6\\). Sanity check directly: a right triangle's area is \\(\\tfrac12\\times\\text{base}\\times\\text{height} = \\tfrac12\\times3\\times4=6\\) -- matches.",
+      "why": "This is the building block `polygon_area` generalizes to more than 3 vertices -- a polygon's shoelace-formula area is exactly this same cross-product idea, summed around every consecutive triple of vertices instead of just one."
+    },
+    "polygon_area": {
+      "intuition": "Generalizes `triangle_area`'s cross-product idea to any polygon: walk around the boundary, and at each edge, accumulate a signed cross-product-like term; the sum works out to twice the enclosed area, no matter how many sides the polygon has.",
+      "formula": "\\[ \\tfrac12\\left|\\sum_{i=0}^{n-1}(x_iy_{i+1}-x_{i+1}y_i)\\right| \\] (indices mod \\(n\\))",
+      "example": "Apply the shoelace formula to the running triangle's 3 vertices \\((0,0),(3,0),(0,4)\\): edge \\((0,0)\\to(3,0)\\): \\(0\\times0-3\\times0=0\\). Edge \\((3,0)\\to(0,4)\\): \\(3\\times4-0\\times0=12\\). Edge \\((0,4)\\to(0,0)\\) (wrapping back to the start): \\(0\\times0-0\\times4=0\\). Sum \\(=0+12+0=12\\); area \\(=\\tfrac12|12|=6\\) -- matching `triangle_area`'s answer exactly, since for exactly 3 vertices the shoelace formula and the direct cross-product formula are the same computation.",
+      "why": "Unlike `triangle_area` (fixed at exactly 3 points), this formula works for a polygon with ANY number of vertices -- the same walk-the-boundary-and-accumulate idea, just summed over more edges."
+    },
+    "polygon_perimeter": {
+      "intuition": "Just add up the length of every edge, walking all the way around back to the start.",
+      "formula": "\\[ \\sum_{i=0}^{n-1}\\lVert p_{i+1}-p_i\\rVert \\] (indices mod \\(n\\))",
+      "example": "For the running triangle: edge lengths are \\(3\\) (\\(P_1\\to P_2\\)), \\(5\\) (\\(P_2\\to P_3\\)), and \\(4\\) (\\(P_3\\to P_1\\)) -- exactly the three side lengths `point2d_distance`'s example already computed. Perimeter \\(=3+5+4=12\\).",
+      "why": "Simple, but easy to get wrong by forgetting the WRAP-AROUND edge (the last vertex back to the first) -- without it, you'd only get the length of an open path, \\(3+5=8\\), missing the triangle's third side entirely."
+    },
+    "polygon_centroid": {
+      "intuition": "The TRUE center of mass of a polygon's interior -- NOT simply the average of its vertex coordinates, which can be noticeably different for an irregular polygon (though for a plain triangle specifically, as this example shows, the two happen to coincide).",
+      "formula": "\\[ C_x=\\dfrac{1}{6A}\\sum(x_i+x_{i+1})(x_iy_{i+1}-x_{i+1}y_i), \\qquad C_y=\\dfrac{1}{6A}\\sum(y_i+y_{i+1})(x_iy_{i+1}-x_{i+1}y_i) \\]",
+      "example": "For the running triangle, reusing `polygon_area`'s cross terms \\((0,\\,12,\\,0)\\) for the three edges and signed area \\(A=6\\): \\(C_x = \\tfrac{1}{36}\\big[(0+3)(0)+(3+0)(12)+(0+0)(0)\\big] = \\tfrac{1}{36}(36)=1\\). \\(C_y=\\tfrac1{36}\\big[(0+0)(0)+(0+4)(12)+(4+0)(0)\\big]=\\tfrac{48}{36}=\\tfrac43\\approx1.333\\). So the centroid is \\((1,\\ 1.333)\\) -- which is EXACTLY the plain average of the three vertices, \\(\\left(\\tfrac{0+3+0}3,\\tfrac{0+0+4}3\\right)=(1,\\tfrac43)\\).",
+      "why": "This exact match between the area centroid and the vertex average is a special property of TRIANGLES specifically -- for a general (especially non-convex or irregular) polygon, the two would genuinely differ, which is exactly why this function does the full area-weighted calculation rather than just averaging the vertices."
+    },
+    "circumcenter": {
+      "intuition": "The one point equally distant from all three of a triangle's vertices -- the center of the unique circle that passes through all three corners.",
+      "formula": "The intersection of any two of the triangle's perpendicular bisectors.",
+      "example": "For a RIGHT triangle specifically, there's a classical shortcut: the circumcenter is always exactly the midpoint of the hypotenuse. For the running triangle, the hypotenuse is \\(P_2P_3\\), whose midpoint is \\((1.5,\\,2)\\) (from `point2d_midpoint`'s example) -- so the circumcenter is \\((1.5,2)\\), no perpendicular-bisector construction needed to guess it for this special case.",
+      "why": "This shortcut ONLY works for right triangles -- for an acute or obtuse triangle, the circumcenter genuinely requires intersecting two perpendicular bisectors and doesn't coincide with any single edge's midpoint. It's a useful sanity check specifically because this running example happens to be a right triangle."
+    },
+    "circumradius": {
+      "intuition": "The radius of the circle `circumcenter` finds the center of -- how far that center point is from any of the triangle's three vertices (all three distances are equal, by definition of the circumcenter).",
+      "formula": "\\[ R = \\dfrac{abc}{4K} \\] where \\(a,b,c\\) are the side lengths and \\(K\\) is the area.",
+      "example": "For the running triangle, sides \\(3,4,5\\) and area \\(6\\) (from earlier examples): \\(R = \\dfrac{3\\times4\\times5}{4\\times6} = \\dfrac{60}{24}=2.5\\). Sanity check via the right-triangle shortcut: the circumradius of a right triangle is always exactly HALF the hypotenuse, \\(5/2=2.5\\) -- matches.",
+      "why": "This formula works for ANY triangle, not just right ones -- the half-hypotenuse shortcut used to double-check it here is specific to right triangles, but \\(R=abc/4K\\) is the general-purpose version this function actually implements."
+    },
+    "conic_classify": {
+      "intuition": "The three conic-section shapes (ellipse, parabola, hyperbola) can be told apart just by looking at the coefficients of the equation's squared and cross terms, without needing to actually plot the curve.",
+      "formula": "For \\(Ax^2+Bxy+Cy^2+\\cdots=0\\), classify by the sign of \\(B^2-4AC\\): negative is an ellipse, zero a parabola, positive a hyperbola.",
+      "example": "The unit circle \\(x^2+y^2=1\\) (a circle is a special case of an ellipse): \\(A=1,B=0,C=1\\), discriminant \\(=0-4(1)(1)=-4\\), negative -- correctly classified as an ellipse. The parabola \\(y=x^2\\), rewritten as \\(x^2-y=0\\): \\(A=1,B=0,C=0\\), discriminant \\(=0-0=0\\) -- correctly a parabola. The hyperbola \\(xy=1\\), rewritten as \\(xy-1=0\\): \\(A=0,B=1,C=0\\), discriminant \\(=1-0=1\\), positive -- correctly a hyperbola.",
+      "why": "All three of these are genuinely different curve SHAPES (a closed loop, an open U-shape, and two separate branches respectively) -- it's a small mathematical surprise that a single sign check on just three coefficients, with no need to solve or plot anything, reliably tells them apart."
+    },
+    "plane_from_points": {
+      "intuition": "Three points that aren't all in a line determine exactly one flat plane through all of them -- find a vector perpendicular to that plane (the cross product of two edge vectors lying IN the plane), then use one of the points to pin down exactly where along that normal direction the plane sits.",
+      "formula": "Normal \\(\\mathbf n=(p_2-p_1)\\times(p_3-p_1)\\); \\(d=-\\mathbf n\\cdot p_1\\), giving the plane \\(n_xx+n_yy+n_zz+d=0\\).",
+      "example": "Through \\(Q_1=(0,0,0)\\), \\(Q_2=(1,0,0)\\), \\(Q_3=(0,1,0)\\): the normal is \\((Q_2-Q_1)\\times(Q_3-Q_1) = (1,0,0)\\times(0,1,0) = (0,0,1)\\) (from `vec3d_cross`'s example). Then \\(d=-\\mathbf n\\cdot Q_1 = -(0\\times0+0\\times0+1\\times0)=0\\). Plane equation: \\(0x+0y+1z+0=0\\), i.e. simply \\(z=0\\) -- correctly identifying this as the ordinary \\(xy\\)-plane, which is exactly the plane all three input points (each with \\(z=0\\)) actually lie in.",
+      "why": "Notice this ONLY works when the three points aren't collinear -- three points on a single straight line don't determine a unique plane (infinitely many planes could contain that line), which would show up as the cross product coming out as the zero vector (no well-defined normal direction)."
+    },
+    "point_plane_distance": {
+      "intuition": "How far a point sits from a plane, measured perpendicular to the plane -- and the SIGN tells you which side of the plane the point is on.",
+      "formula": "\\[ \\dfrac{n_xp_x+n_yp_y+n_zp_z+d}{\\lVert\\mathbf n\\rVert} \\]",
+      "example": "Using `plane_from_points`'s plane \\(z=0\\) (\\(\\mathbf n=(0,0,1)\\), \\(d=0\\), \\(\\lVert\\mathbf n\\rVert=1\\)) and the point \\((5,5,3)\\): distance \\(=\\dfrac{0\\times5+0\\times5+1\\times3+0}{1}=3\\) -- correctly matching the point's height of 3 units directly above the \\(xy\\)-plane.",
+      "why": "If the point had instead been at \\((5,5,-3)\\) (below the plane), this same formula would give \\(-3\\) -- the NEGATIVE sign is meaningful, telling you which of the plane's two sides the point is on, not just how far away it is."
+    },
+    "line3d_distance": {
+      "intuition": "Two lines in 3D that aren't parallel don't necessarily intersect -- they can pass by each other at different heights, like two roads on different levels of a highway interchange. The shortest distance between them is measured along the ONE direction perpendicular to both lines at once.",
+      "formula": "\\[ \\dfrac{|(p_2-p_1)\\cdot(d_1\\times d_2)|}{\\lVert d_1\\times d_2\\rVert} \\]",
+      "example": "Line 1: through \\((0,0,0)\\), direction \\((1,0,0)\\) (the \\(x\\)-axis). Line 2: through \\((0,0,1)\\), direction \\((0,1,0)\\) (parallel to the \\(y\\)-axis, but shifted up by 1 in \\(z\\)). \\(d_1\\times d_2 = (1,0,0)\\times(0,1,0)=(0,0,1)\\) (from `vec3d_cross`'s example). \\((p_2-p_1) = (0,0,1)\\). Dot product: \\((0,0,1)\\cdot(0,0,1)=1\\). Divide by \\(\\lVert(0,0,1)\\rVert=1\\): distance \\(=1\\) -- matching the obvious answer by inspection (the two lines are just the \\(x\\)-axis and a copy of it shifted up 1 unit in \\(z\\), so their closest approach is exactly that 1-unit vertical gap).",
+      "why": "This formula handles the general SKEW case correctly without needing to first figure out visually (as the example's simple setup allowed) which direction the closest approach happens along -- for two lines at an arbitrary angle and offset, \\(d_1\\times d_2\\) automatically finds that one perpendicular-to-both direction, and the dot product measures how far apart the lines are specifically along it."
+    },
+    "triangle_angle": {
+      "intuition": "Knowing all three of a triangle's side lengths is enough to recover every one of its angles, without needing any coordinates at all -- the law of cosines is the tool that connects side lengths directly to angles.",
+      "formula": "\\[ C = \\arccos\\!\\left(\\dfrac{a^2+b^2-c^2}{2ab}\\right) \\] (angle opposite side \\(c\\))",
+      "example": "For the running triangle's sides \\(3,4,5\\), find the angle opposite the longest side (\\(c=5\\), the hypotenuse), using \\(a=3,b=4\\): \\(C=\\arccos\\!\\left(\\dfrac{9+16-25}{2\\times3\\times4}\\right) = \\arccos\\!\\left(\\dfrac{0}{24}\\right) = \\arccos(0)=90°\\) -- confirming the right angle, via a completely different route (pure side-length algebra, no vectors or coordinates) than `vec2d_dot`'s or `vec2d_angle_between`'s coordinate-based confirmations of the same fact.",
+      "why": "Three independent confirmations of the same right angle (`vec2d_dot`'s zero dot product, `vec2d_angle_between`'s direct \\(90°\\) computation, and this side-lengths-only law-of-cosines route) is a strong consistency check that all three functions -- despite using genuinely different mathematical machinery -- agree with each other on this running example."
+    }
   }
 }
