@@ -29,7 +29,7 @@
     "vec2d_norm": {
       "intuition": "A vector's length -- how far its tip is from its tail, ignoring direction entirely.",
       "formula": "\\[ \\lVert a\\rVert = \\sqrt{a_x^2+a_y^2} \\]",
-      "example": "For \\(a=P_2-P_1=(3,0)\\): \\(\\lVert a\\rVert = \\sqrt{9+0}=3\\) -- matching `point2d_distance(P_1,P_2)=3\\) exactly, since a vector's length IS the distance between its tail and tip.",
+      "example": "For \\(a=P_2-P_1=(3,0)\\): \\(\\lVert a\\rVert = \\sqrt{9+0}=3\\) -- matching `point2d_distance(P_1,P_2)=3` exactly, since a vector's length IS the distance between its tail and tip.",
       "why": "This is the denominator `vec2d_normalize` divides by to get a unit vector, and it's also what `vec2d_angle_between`'s formula divides the dot product by -- a building block for several of the other vector functions."
     },
     "vec2d_normalize": {
