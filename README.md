@@ -10,6 +10,8 @@ Functions that take a *collection* of points use `ref Vec<Point2D>`
 `Vec<f64>` convention established in
 [vani-matrix](https://github.com/enthusiasticgeek/vani-matrix)/[vani-optimize](https://github.com/enthusiasticgeek/vani-optimize).
 
+**API reference / tutorial:** <https://enthusiasticgeek.github.io/vani-geometry/>
+
 ## Add to your project
 
 ```toml
