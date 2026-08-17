@@ -1,6 +1,6 @@
 # vani-geometry
 
-Computational and analytic geometry library for the [vāṇी compiler](https://github.com/enthusiasticgeek/vani-compiler).
+Computational and analytic geometry library for the [vāṇī compiler](https://github.com/enthusiasticgeek/vani-compiler).
 
 `Point2D`, `Point3D`, and `Plane` are plain structs with only `f64` fields --
 no heap-owning fields, so they're freely copyable, like
@@ -63,7 +63,7 @@ and friends, which all take `ref Vec<Point2D>`.
 
 ## What this library does NOT provide
 
-These are already vāṇी compiler builtins — call them directly, no import needed:
+These are already vāṇī compiler builtins — call them directly, no import needed:
 
 `abs` `sqrt` `sin` `cos` `tan` `atan2` `acos` `asin` `f64_hypot` `f64_pi()`
 `push` `pop` `len` `set`

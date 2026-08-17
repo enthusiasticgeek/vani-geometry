@@ -7,7 +7,7 @@
 // `mut ref Vec<Point2D>` (in-place sort), matching the Vec<f64> convention
 // established in vani-matrix/vani-optimize.
 //
-// IMPORTANT — do NOT reimplement vāṇी compiler builtins.
+// IMPORTANT — do NOT reimplement vāṇī compiler builtins.
 // Already available as builtins (call directly, never redeclare here):
 //   abs sqrt sin cos tan atan2 acos asin f64_hypot f64_pi push pop len set
 //
